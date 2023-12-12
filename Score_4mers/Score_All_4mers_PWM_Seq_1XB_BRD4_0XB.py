@@ -56,5 +56,5 @@ plt.gca().spines['left'].set_linewidth(border_thickness)
 plt.gca().xaxis.set_tick_params(width=tick_thickness)
 plt.gca().yaxis.set_tick_params(width=tick_thickness)
 
-plt.show()
 plt.savefig('Score_4-mers_1XB_2XB.png', dpi=300, bbox_inches='tight')
+plt.show()
