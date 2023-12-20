@@ -23,37 +23,7 @@ def score_sequence(sequence, cutoff=0.5, re_all=False):
 				total_score += score
 	return total_score, num_ibms, seq_score
 	
-def prepare_output(sequence, protein_id):
-	
-	total_score, num_ibms, seq_scores = score_sequence(sequence, cutoff=args.Cutoff_Value, re_all=args.Return_All)
-	if args.Output_File:
-		output_file = args.Output_File
-		with open(output_file, 'a') as out_file:
-			out_file.write(protein_id + '\n')
-			out_file.write('Total IBM Score: ' + "%.2f" % total_score + '\n')
-			out_file.write('Number of IBMs: ' + str(num_ibms) + '\n')
-	else:
-		print(protein_id)
-		print('Total IBM Score: ' + "%.2f" % total_score)
-		print('Number of IBMs: ' + str(num_ibms))
-	for resi in seq_scores.keys():
-		if seq_scores[resi][1] > 0.5:
-			resi_output = str(resi) + ' ' + seq_scores[resi][0] + ' ' + 'X ' + "%.2f" % seq_scores[resi][1]
-		else:
-			resi_output = str(resi) + ' ' + seq_scores[resi][0] + ' ' + '- ' + "%.2f" % seq_scores[resi][1]
-		if args.Output_File:
-			output_file = args.Output_File
-			with open(output_file, 'a') as out_file:
-				out_file.write(resi_output + '\n')
-		else:
-			print(resi_output)
-	if args.Output_File:
-		output_file = args.Output_File
-		with open(output_file, 'a') as out_file:
-			out_file.write('\n')
-	else:
-		print('\n')
-	
+
 
 if __name__ == "__main__":
 	# Argument Parser 
@@ -87,19 +57,34 @@ if __name__ == "__main__":
 	protein_id = ''
 	skip_next = True
 	with open(input_file, 'r') as in_file:
-		for line_idx, line in enumerate(in_file):
-			if line_idx == 0 and line[0] != '>':
-				raise ValueError('Input FASTA must start with > followed by the protein identification information')
-			if line[0] == '>':
-				if len(protein_id) > 0 and len(sequence) > 0:
-					prepare_output(sequence, protein_id)
-					sequence = ''
-					protein_id = line.strip()
+		for line in in_file:
+			if skip_next == True:
+				if line.startswith('>'):
+					protein_id = '>' + line[1:].strip()
+					skip_next = False
+			elif skip_next == False:
+				total_score, num_ibms, seq_scores = score_sequence(line.strip(), cutoff=args.Cutoff_Value, re_all=args.Return_All)
+				if args.Output_File:
+					with open(output_file, 'a') as out_file:
+						out_file.write(protein_id + '\n')
+						out_file.write('Total IBM Score: ' + "%.2f" % total_score + '\n')
+						out_file.write('Number of IBMs: ' + str(num_ibms) + '\n')
+
 				else:
-					protein_id = line.strip()
-			
-			else:
-				sequence += line.strip()
-		
-		if len(protein_id) > 0 and len(sequence) > 0:
-			prepare_output(sequence, protein_id)
+					print(protein_id)
+					print('Total IBM Score: ' + "%.2f" % total_score)
+					print('Number of IBMs: ' + str(num_ibms))
+						
+				for resi in seq_scores.keys():
+					if seq_scores[resi][1] > 0.5:
+						resi_output = str(resi) + ' ' + seq_scores[resi][0] + ' ' + 'X ' + "%.2f" % seq_scores[resi][1]
+					else:
+						resi_output = str(resi) + ' ' + seq_scores[resi][0] + ' ' + '- ' + "%.2f" % seq_scores[resi][1]
+					if args.Output_File:
+						with open(output_file, 'a') as out_file:
+							out_file.write(resi_output + '\n')
+					else:
+						print(resi_output)
+				skip_next = True
+	
+
